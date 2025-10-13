@@ -7,13 +7,13 @@
 /// by Andrés Bernárdez (2025)
 ///
 
-#include"C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\arduino.h"
-
+///#include"C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\arduino.h"
+#include<cmath>
 class stepperAndy{
 
 public:
   
-int position=0;
+int positionS=0;
 
 long int delayTime=10000;
 int pin1;
@@ -63,38 +63,38 @@ int pin4;
   
   void StepUp(){
     
-    switch(position){
+    switch(positionS){
       case 0:	digitalWrite(pin4,LOW);
       			digitalWrite(pin1,HIGH);
-      			position++;
+      			positionS++;
       			break;
       case 1:	digitalWrite(pin1,HIGH);
       			digitalWrite(pin2,HIGH);
-      			position++;
+      			positionS++;
       			break;
       case 2:	digitalWrite(pin1,LOW);
       			digitalWrite(pin2,HIGH);
-      			position++;
+      			positionS++;
       			break;
       case 3: 	digitalWrite(pin2,HIGH);
       			digitalWrite(pin3,HIGH);
-      			position++;
+      			positionS++;
       			break;
       case 4:	digitalWrite(pin2,LOW);
       			digitalWrite(pin3,HIGH);
-      			position++;
+      			positionS++;
       			break;
       case 5: 	digitalWrite(pin3,HIGH);
       			digitalWrite(pin4,HIGH);
-      			position++;
+      			positionS++;
       			break;
       case 6:	digitalWrite(pin3,LOW);
       			digitalWrite(pin4,HIGH);
-      			position++;
+      			positionS++;
       			break;
       case 7: 	digitalWrite(pin4,HIGH);
       			digitalWrite(pin1,HIGH);
-      			position=0;
+      			positionS=0;
 				break;      
     }
     
@@ -105,38 +105,38 @@ int pin4;
   
   void StepDown(){
     
-    switch(position){
+    switch(positionS){
       case 0:	digitalWrite(pin2,LOW);
       			digitalWrite(pin1,HIGH);
-      			position--;
+      			positionS--;
       			break;
       case 1:	digitalWrite(pin1,HIGH);
       			digitalWrite(pin2,HIGH);
-      			position--;
+      			positionS--;
       			break;
       case 2:	digitalWrite(pin3,LOW);
       			digitalWrite(pin2,HIGH);
-      			position--;
+      			positionS--;
       			break;
       case 3: 	digitalWrite(pin2,HIGH);
       			digitalWrite(pin3,HIGH);
-      			position--;
+      			positionS--;
       			break;
       case 4:	digitalWrite(pin4,LOW);
       			digitalWrite(pin3,HIGH);
-      			position--;
+      			positionS--;
       			break;
       case 5: 	digitalWrite(pin3,HIGH);
       			digitalWrite(pin4,HIGH);
-      			position--;
+      			positionS--;
       			break;
       case 6:	digitalWrite(pin1,LOW);
       			digitalWrite(pin4,HIGH);
-      			position--;
+      			positionS--;
       			break;
       case 7: 	digitalWrite(pin4,HIGH);
       			digitalWrite(pin1,HIGH);
-      			position--;
+      			positionS--;
 				break;      
     }
     
@@ -290,6 +290,12 @@ class stepperAndy3D{
     
     
   } 
+  void Speed(long int speed){
+
+    motor1.Speed(speed);
+    motor2.Speed(speed);
+    motor3.Speed(speed);
+  }
   
   
   void Calibrate(){
@@ -456,7 +462,7 @@ class stepperAndy3D{
   }
   
   
-  void goTo3D(double toX,double toY,double toZ){
+  int goTo3D(double toX,double toY,double toZ){
     
     long int diffX=0,diffY=0,diffZ=0;
     long int stepX=1,stepY=1,stepZ=1;
@@ -464,10 +470,13 @@ class stepperAndy3D{
     long int extraX=0,extraY=0,extraZ=0;
     long int nextExtraX=0,nextExtraY=0,nextExtra=0;
     long int i,N;
+    int error=0;
     
     int finished=1;
     
     int directionX=0,directionY=0,directionZ=0;
+
+    int extraDelay=0;
     
     
     //calculate distance
@@ -526,89 +535,119 @@ class stepperAndy3D{
     
     
     
-   for(i=1;i<=N;i++){
-     
-     if(i%stepX){
+   for(i=1;i<=N&&error==0;i++){
+     extraDelay=0;
+     if(i%stepX&&positionX>0&&positionX<counterM1){
        if(!directionX){
          motor1.StepUp();
          positionX++;
+         extraDelay=1;
        }
        else {
          motor1.StepDown();
          positionX--;
+         extraDelay=1;
        }
        
        
      }
-     if(i%stepY){
+     else if(!(positionX>0&&positionX<counterM1)) error=1001;
+     
+     if(i%stepY&&positionY>0&&positionY<counterM2){
        if(!directionY){
          motor2.StepUp();
          positionY++;
+         extraDelay=1;
        }
        else {
          motor2.StepDown();
          positionY--;
+         extraDelay=1;
        }
        
        
      }
-     if(i%stepZ){
+     else if(!(positionY>0&&positionY<counterM2)) error=1002;
+     
+     if(i%stepZ&&positionZ>0&&positionZ<counterM3){
        if(!directionZ){
          motor3.StepUp();
          positionZ++;
+         extraDelay=1;
        }
        else {
          motor3.StepDown();
          positionZ--;
+         extraDelay=1;
        }
        
      }
-      
-     if(i<N){
-       if(extraX>0)
+     else if(!(positionZ>0&&positionZ<counterM3)) error=1003;
+
+     if(extraDelay)delayMicroseconds(delayTime);
+
+     extraDelay=0;
+     if(extraX>0||extraY>0||extraZ>0){
+       if(extraX>0&&positionX>0&&positionX<counterM1){
          if(nextExtraX==i){
             if(!directionX){
                motor1.StepUp();
                positionX++;
+               extraDelay=1;
              }
              else {
                motor1.StepDown();
                positionX--;
+               extraDelay=1;
              }
          	nextExtraX+=ExtraX;
+        }
        }
-       if(extraY>0)
+       else if(!(positionX>0&&positionX<counterM1))error=1011;
+       
+       if(extraY>0&&positionY>0&&positionY<counterM2){
          if(nextExtraY==i){
             if(!directionY){
                motor2.StepUp();
                positionY++;
+               extraDelay=1;
              }
              else {
                motor2.StepDown();
                positionY--;
+               extraDelay=1;
              }
          	nextExtraY+=ExtraY;
+        }
        }
-        if(extraY>0)
+       else if(!(positionY>0&&positionY<counterM2))error=1012;
+       
+        if(extraY>0&&positionZ>0&&positionZ<counterM3){
          if(nextExtraZ==i){
          	 if(!directionZ){
                motor3.StepUp();
                positionZ++;
+               extraDelay=1;
              }
              else {
                motor3.StepDown();
                positionZ--;
+               extraDelay=1;
              }
          	nextExtraZ+=ExtraZ;
        }
+      }
+       else if(!(positionZ>0&&positionZ<counterM3)) error=1013;
+
+      if(extraDelay) delayMicroseconds(delayTime);
+      
      }
       
-      delayMicroseconds(delayTime);
       
     }
     
     
-    
+    return(error);
     
     
   }
@@ -632,8 +671,14 @@ class stepperAndy3D{
 }
 
 
-void plainCircleArcNextPoint(double centerX,double centerY,double centerZ,int mode, int radius, int direction){
 
+
+void plainCircleArc(long int fromX,long int toX,long int fromY,long int toY,long inte fromY,long int toZ,long int centerX,long int centerY, long int centerZ, long int radius,int angleDirection){
+
+
+
+
+ 
 // Do you still remember Algebra?? ohhh yeah, dude! Here is where you will use it! haha!
 
 // system 3D plane+sphere (not used)
@@ -654,39 +699,125 @@ void plainCircleArcNextPoint(double centerX,double centerY,double centerZ,int mo
 
 //2D parametric circle for g-code
 
-int currentI,currentJ,currentK,CenterI,CenterJ;
 
 
 
 
-switch(mode):
+long int currentI,currentJ,currentK,centerI,centerJ,endI,endJ;
 
-case XYMode: currentI=
-case XZMode=1;
-case YZMode=2;
-default:
-switch()
+double angle,R;
+
+class stepperAndy *motorI,*motorJ;
 
 
-
+R=(double)radius;
 
 
 
-
-
-}
-
-
-void plainCircleArc(double fromX,double toX,double fromY,double toY,double fromY,double toZ,double centerX,double centerY, double centerZ, double radius,int direction){
 
     goTo3D(fromX,fromY,fromZ);
     //activate somthing here-------
 
     //-----------------------
+  
+  switch(mode){
+  
+  
+        case XZMode: currentI=positionX;
+                     currentJ=positionZ;
+                     currentK=positionY;
+                     centerI=centerX;
+                     centerJ=centerZ;
+                     endI=toX;
+                     endJ=toZ;
+                     motorI=&motor1;
+                     motorJ=&motor3;
+
+                     
+                     break;
+        case YZMode: currentI=positionY;
+                     currentJ=positionZ;
+                     currentK=positionX;
+                     centerI=centerY;
+                     centerJ=centerZ;
+                     endI=toY;
+                     endJ=toZ;
+                     motorI=&motor2;
+                     motorJ=&motor3;
+                     break;
+        case XYMode:       
+        default:     currentI=positionX;
+                     currentJ=positionY;
+                     currentK=positionZ;
+                     centerI=centerX;
+                     centerJ=centerY;
+                     endI=toX;
+                     endJ=toY;
+                     motorI=&motor1;
+                     motorJ=&motor2;
+                     break;     
+  
+  }
 
 
-    //still programming
+if(currentJ!=centerJ)angle=atang((currentI-centerI)/(currentJ-centerJ));else
+if(currentI>centerI)angle=0;else angle=PI;
 
+if(endJ!=centerJ) endAngle=atang((endI-centerI)/(endJ-centerJ));
+else if (endI>centerI)endAngle=0;else endAngle=PI;
+
+
+
+if(angleDirection==1){
+
+  if(angle<endAngle)endAngle=-2*PI+endAngle;
+  while(angle>endAngle){
+      while((nextI-currentI==0)&&(nextJ-currentJ==0))
+      {   
+        angle--;
+        nextI=centerI+(long int)(R*cos(angle));
+        nextJ=centerJ+(long int)(R*sin(angle));
+      
+      }
+    
+    switch(mode){
+      case XZMode:  goTo3D(nextI,currentK,nextJ);
+                    break;
+      case YZMode:  goTo3d(currentK,nextI,nextJ);
+                    break;
+      case XYMode:  
+      default:      goTo3d(nextI,nextJ,currentK);
+                    break;
+      }
+    }
+  }
+
+
+}
+
+else if(angleDirection==-1){
+
+  if(angle>endAngle)endAngle=+2*PI+endAngle;
+  while(angle<endAngle){
+      while((nextI-currentI==0)&&(nextJ-currentJ==0))
+      {   
+        angle++;
+        nextI=centerI+(long int)(R*cos(angle));
+        nextJ=centerJ+(long int)(R*sin(angle));
+      
+      }
+    
+    switch(mode){
+      case XZMode:  goTo3D(nextI,currentK,nextJ);
+                    break;
+      case YZMode:  goTo3d(currentK,nextI,nextJ);
+                    break;
+      case XYMode:  
+      default:      goTo3d(nextI,nextJ,currentK);
+                    break;
+      }
+    }
+  }
 
 
 }
@@ -701,7 +832,14 @@ void plainCircleArc(double fromX,double toX,double fromY,double toY,double fromY
 
 void setup()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(9600);
+
+
+
+
+
+
+  
 }
 
 void loop()
