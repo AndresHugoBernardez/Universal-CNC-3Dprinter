@@ -57,7 +57,8 @@ int pin4;
     //frequency/60=cicles per seconds
     //frequency*4096/(60)= steps per seconds
     //60*1000000/(frequency*4096)= microseconds per step.
-    delayTime=((60*1000000)/(frequency*4096));
+    if(frequency>0)delayTime=((60*1000000)/(frequency*4096));
+    else delayTime=1000;
     
    
   
@@ -110,7 +111,7 @@ int pin4;
     switch(positionS){
       case 0:	digitalWrite(pin2,LOW);
       			digitalWrite(pin1,HIGH);
-      			positionS--;
+      			positionS=7;
       			break;
       case 1:	digitalWrite(pin1,HIGH);
       			digitalWrite(pin2,HIGH);
@@ -149,14 +150,14 @@ int pin4;
   void Steps(int stepsNumber){
     int i;
     if(stepsNumber>0){
-      for(i=0;i<stepsNumbers;i++){
+      for(i=0;i<stepsNumber;i++){
         StepUp();
 		delayMicroseconds(delayTime);
         
       }
       
     }else if(stepsNumber<0)
-      for(i=0;i>stepsNumbers;i--){
+      for(i=0;i>stepsNumber;i--){
         StepDown();
 		delayMicroseconds(delayTime);
         
@@ -168,7 +169,7 @@ int pin4;
   
   
   
-}
+};
 
 /// @brief variables for pin detection
 struct sensor{
@@ -177,41 +178,41 @@ struct sensor{
   int status=LOW;
   int waiting=LOW;
   
-}
+};
   
 
 /// @brief digital readings can have interference, so when you read a pin you must do it at less twice.
 /// @param sIn name of the sensor
 /// @param delayTime min time between 2 detections before accept the reading.
-void detectSensor(struct sensor sIn,long int delayTime){
+void detectSensor(struct sensor *sIn,long int delayTime){
   
-  if(sIn.status==LOW){
-    if(digitalRead(sIn.pin)==HIGH){
-    	if(sIn.waiting==LOW){
-    		sIn.microSecondsWaited=millis()+delayTime;
-    		sIn.waiting=HIGH;
+  if(sIn->status==LOW){
+    if(digitalRead(sIn->pin)==HIGH){
+    	if(sIn->waiting==LOW){
+    		sIn->microSecondsWaited=millis()+delayTime;
+    		sIn->waiting=HIGH;
   		}
-  		else if(millis()>sIn.microSecondsWaited){
-      		sIn.status=HIGH;
+  		else if(millis()>sIn->microSecondsWaited){
+      		sIn->status=HIGH;
     	}
     
   	}
 	else{
-      		sIn.waiting=LOW;
+      		sIn->waiting=LOW;
 		}
 	}
   //if(sIn.status==HIGH)
-else if (digitalRead(sIn.pin)==LOW){
-    	if(sIn.waiting==HIGH){
-    		sIn.microSecondsWaited==millis()+delayTime;
-    		sIn.waiting==LOW;
+else if (digitalRead(sIn->pin)==LOW){
+    	if(sIn->waiting==HIGH){
+    		sIn->microSecondsWaited=millis()+delayTime;
+    		sIn->waiting=LOW;
   		}
-		else if(millis()>sIn.microSecondsWaited){
-      			sIn.status=LOW;
+		else if(millis()>sIn->microSecondsWaited){
+      			sIn->status=LOW;
     	}
 	}
   	else{
-      		sIn.waiting=HIGH;
+      		sIn->waiting=HIGH;
     }
 }
 
@@ -365,21 +366,21 @@ class stepperAndy3D{
       
       
       ///  limits detection
-      detectSensor(limitM11,4);
-      detectSensor(limitM12,4);
-      detectSensor(limitM21,4);
-      detectSensor(limitM22,4);
-      detectSensor(limitM31,4);
-      detectSensor(limitM32,4);
+      detectSensor(&limitM11,4);
+      detectSensor(&limitM12,4);
+      detectSensor(&limitM21,4);
+      detectSensor(&limitM22,4);
+      detectSensor(&limitM31,4);
+      detectSensor(&limitM32,4);
       
       delay(5);
       
-      detectSensor(limitM11,4);
-      detectSensor(limitM12,4);
-      detectSensor(limitM21,4);
-      detectSensor(limitM22,4);
-      detectSensor(limitM31,4);
-      detectSensor(limitM32,4);
+      detectSensor(&limitM11,4);
+      detectSensor(&limitM12,4);
+      detectSensor(&limitM21,4);
+      detectSensor(&limitM22,4);
+      detectSensor(&limitM31,4);
+      detectSensor(&limitM32,4);
       
       
       
@@ -392,7 +393,7 @@ class stepperAndy3D{
         if(directionM1==0){
           directionM1=1;
           
-        } else(directionM1==1){
+        } else if(directionM1==1){
           directionM1=2;
           finishM1=1;
         }
@@ -404,7 +405,7 @@ class stepperAndy3D{
         if(directionM1==0){
           directionM1=1;
           
-        } else(directionM1==1){
+        } else if(directionM1==1){
           directionM1=2;
           finishM1=1;
         }
@@ -416,7 +417,7 @@ class stepperAndy3D{
         if(directionM2==0){
           directionM2=1;
           
-        } else(directionM2==1){
+        } else if(directionM2==1){
           directionM2=2;
           finishM2=1;
         }
@@ -428,7 +429,7 @@ class stepperAndy3D{
         if(directionM2==0){
           directionM2=1;
           
-        } else(directionM2==1){
+        } else if(directionM2==1){
           directionM2=2;
           positionX=1;
           finishM2=1;
@@ -441,7 +442,7 @@ class stepperAndy3D{
         if(directionM3==0){
           directionM3=1;
           
-        } else(directionM3==1){
+        } else if(directionM3==1){
           directionM3=2;
           positionY=1;
           finishM3=1;
@@ -454,7 +455,7 @@ class stepperAndy3D{
         if(directionM3==0){
           directionM3=1;
           
-        } else(directionM3==1){
+        } else if(directionM3==1){
           directionM3=2;
           positionZ=1;
           finishM3=1;
@@ -546,21 +547,21 @@ class stepperAndy3D{
       
       
       ///  limits detection
-      detectSensor(limitM11,4);
-      detectSensor(limitM12,4);
-      detectSensor(limitM21,4);
-      detectSensor(limitM22,4);
-      detectSensor(limitM31,4);
-      detectSensor(limitM32,4);
+      detectSensor(&limitM11,4);
+      detectSensor(&limitM12,4);
+      detectSensor(&limitM21,4);
+      detectSensor(&limitM22,4);
+      detectSensor(&limitM31,4);
+      detectSensor(&limitM32,4);
       
       delay(5);
       
-      detectSensor(limitM11,4);
-      detectSensor(limitM12,4);
-      detectSensor(limitM21,4);
-      detectSensor(limitM22,4);
-      detectSensor(limitM31,4);
-      detectSensor(limitM32,4);
+      detectSensor(&limitM11,4);
+      detectSensor(&limitM12,4);
+      detectSensor(&limitM21,4);
+      detectSensor(&limitM22,4);
+      detectSensor(&limitM31,4);
+      detectSensor(&limitM32,4);
       
       
       
@@ -573,7 +574,7 @@ class stepperAndy3D{
         if(directionM1==0){
           directionM1=1;
           
-        } else(directionM1==1){
+        } else if(directionM1==1){
           directionM1=2;
           finishM1=1;
         }
@@ -585,7 +586,7 @@ class stepperAndy3D{
         if(directionM1==0){
           directionM1=1;
           
-        } else(directionM1==1){
+        } else if(directionM1==1){
           directionM1=2;
           finishM1=1;
         }
@@ -597,7 +598,7 @@ class stepperAndy3D{
         if(directionM2==0){
           directionM2=1;
           
-        } else(directionM2==1){
+        } else if(directionM2==1){
           directionM2=2;
           finishM2=1;
         }
@@ -609,7 +610,7 @@ class stepperAndy3D{
         if(directionM2==0){
           directionM2=1;
           
-        } else(directionM2==1){
+        } else if(directionM2==1){
           directionM2=2;
           positionX=1;
           finishM2=1;
@@ -622,7 +623,7 @@ class stepperAndy3D{
         if(directionM3==0){
           directionM3=1;
           
-        } else(directionM3==1){
+        } else if(directionM3==1){
           directionM3=2;
           positionY=1;
           finishM3=1;
@@ -635,7 +636,7 @@ class stepperAndy3D{
         if(directionM3==0){
           directionM3=1;
           
-        } else(directionM3==1){
+        } else if(directionM3==1){
           directionM3=2;
           positionZ=1;
           finishM3=1;
@@ -711,13 +712,13 @@ class stepperAndy3D{
   /// @param toY next Y position
   /// @param toZ next Z position
   /// @return 
-  int goTo3D(double toX,double toY,double toZ){
+  int goTo3D(long int toX,long int toY,long int toZ){
     
     long int diffX=0,diffY=0,diffZ=0;
     long int stepX=1,stepY=1,stepZ=1;
-    long int addX=0,addY=,addZ=0;
+    long int addX=0,addY0,addZ=0;
     long int extraX=0,extraY=0,extraZ=0;
-    long int nextExtraX=0,nextExtraY=0,nextExtra=0;
+    long int nextExtraX=0,nextExtraY=0,nextExtraZ=0;
     long int borderX,borderY,borderZ;
     long int i,N;
     int error=0;
@@ -764,20 +765,23 @@ class stepperAndy3D{
       else N=diffZ;
     }
     
+
+
+    
     //steps
-    stepX=N/diffX;
-    stepY=N/diffY;
-    stepZ=N/diffZ;
+    if(diffX!=0)stepX=N/diffX;else stepX=0;
+    if(diffY!=0)stepY=N/diffY;else stepY=0;
+    if(diffZ!=0)stepZ=N/diffZ;else stepZ=0;
     //residue
-    addX=N%diffX;
-    addY=N%diffY;
-    addZ=N%diffZ;
+    if(diffX!=0)addX=N%diffX;else addX=0;
+    if(diffY!=0)addY=N%diffY;else addY=0;
+    if(diffZ!=0)addZ=N%diffZ;else addZ=0;
     //extra steps
     
     if(addX!=0)extraX=N/(addX+1);
     else extraX=0;
     if(addY!=0)extraY=N/(addY+1);
-    else extraX=0;
+    else extraY=0;
     if(addZ!=0)extraZ=N/(addZ+1);
     else extraZ=0;
     
@@ -798,26 +802,26 @@ class stepperAndy3D{
 
       
      ///--------------BORDER WATCHDOG (if it is near borders it must try to detect limits)
-      if(postitionX<20||positionX>borderX){
+      if(positionX<20||positionX>borderX){
    
-        detectSensor(limitM11,4);
-        detectSensor(limitM12,4);
+        detectSensor(&limitM11,4);
+        detectSensor(&limitM12,4);
         activateDelayBorder=1;
     
       }
 
-       if(postitionY<20||positionY>borderY){
+       if(positionY<20||positionY>borderY){
    
-        detectSensor(limitM21,4);
-        detectSensor(limitM22,4);
+        detectSensor(&limitM21,4);
+        detectSensor(&limitM22,4);
         activateDelayBorder=1;
     
       }
       
-       if(postitionZ<20||positionY>borderZ){
+       if(positionZ<20||positionY>borderZ){
    
-        detectSensor(limitM31,4);
-        detectSensor(limitM32,4);
+        detectSensor(&limitM31,4);
+        detectSensor(&limitM32,4);
         activateDelayBorder=1;
     
       }
@@ -829,26 +833,26 @@ class stepperAndy3D{
       }
 
       ///new detection (it avoids iterference errors)
-      if(postitionX<20||positionX>borderX){
+      if(positionX<20||positionX>borderX){
    
-        detectSensor(limitM11,4);
-        detectSensor(limitM12,4);
+        detectSensor(&limitM11,4);
+        detectSensor(&limitM12,4);
         activateDelayBorder=1;
     
       }
 
-       if(postitionY<20||positionY>borderY){
+       if(positionY<20||positionY>borderY){
    
-        detectSensor(limitM21,4);
-        detectSensor(limitM22,4);
+        detectSensor(&limitM21,4);
+        detectSensor(&limitM22,4);
         activateDelayBorder=1;
     
       }
       
-       if(postitionZ<20||positionY>borderZ){
+       if(positionZ<20||positionY>borderZ){
    
-        detectSensor(limitM31,4);
-        detectSensor(limitM32,4);
+        detectSensor(&limitM31,4);
+        detectSensor(&limitM32,4);
         activateDelayBorder=1;
     
       }
@@ -864,7 +868,7 @@ class stepperAndy3D{
       ///------------------end Border watchdog
       
 
-     if(i%stepX&&positionX>0&&positionX<counterM1){
+     if(stepX) if(!(i%stepX)&&positionX>0&&positionX<counterM1){
        if(!directionX){
          motor1.StepUp();
          positionX++;
@@ -881,7 +885,7 @@ class stepperAndy3D{
      }
      else if(!(positionX>0&&positionX<counterM1)) error=1001;
      
-     if(i%stepY&&positionY>0&&positionY<counterM2){
+     if(stepY) if(!(i%stepY)&&positionY>0&&positionY<counterM2){
        if(!directionY){
          motor2.StepUp();
          positionY++;
@@ -897,7 +901,7 @@ class stepperAndy3D{
      }
      else if(!(positionY>0&&positionY<counterM2)) error=1002;
      
-     if(i%stepZ&&positionZ>0&&positionZ<counterM3){
+     if(stepZ) if(!(i%stepZ)&&positionZ>0&&positionZ<counterM3){
        if(!directionZ){
          motor3.StepUp();
          positionZ++;
@@ -912,7 +916,7 @@ class stepperAndy3D{
      }
      else if(!(positionZ>0&&positionZ<counterM3)) error=1003;
 
-     if(activateDelay)delayMicroseconds(delayTime);
+     if(activateDelay)delayMicroseconds(motor1.delayTime);
 
      activateDelay=0;
      if(extraX>0||extraY>0||extraZ>0){
@@ -928,7 +932,7 @@ class stepperAndy3D{
                positionX--;
                activateDelay=1;
              }
-         	nextExtraX+=ExtraX;
+         	nextExtraX+=extraX;
         }
        }
        else if(!(positionX>0&&positionX<counterM1))error=1011;
@@ -945,12 +949,12 @@ class stepperAndy3D{
                positionY--;
                activateDelay=1;
              }
-         	nextExtraY+=ExtraY;
+         	nextExtraY+=extraY;
         }
        }
        else if(!(positionY>0&&positionY<counterM2))error=1012;
        
-        if(extraY>0&&positionZ>0&&positionZ<counterM3){
+        if(extraZ>0&&positionZ>0&&positionZ<counterM3){
          if(nextExtraZ==i){
          	 if(!directionZ){
                motor3.StepUp();
@@ -962,38 +966,38 @@ class stepperAndy3D{
                positionZ--;
                activateDelay=1;
              }
-         	nextExtraZ+=ExtraZ;
+         	nextExtraZ+=extraZ;
        }
       }
        else if(!(positionZ>0&&positionZ<counterM3)) error=1013;
 
-      if(activateDelay) delayMicroseconds(delayTime);
+      if(activateDelay) delayMicroseconds(motor1.delayTime);
       
      }
       
      
      
      ///--------------BORDER WATCHDOG (if it is near borders it must try to detect limits)
-      if(postitionX<20||positionX>borderX){
+      if(positionX<20||positionX>borderX){
    
-        detectSensor(limitM11,4);
-        detectSensor(limitM12,4);
+        detectSensor(&limitM11,4);
+        detectSensor(&limitM12,4);
         activateDelayBorder=1;
     
       }
 
-       if(postitionY<20||positionY>borderY){
+       if(positionY<20||positionY>borderY){
    
-        detectSensor(limitM21,4);
-        detectSensor(limitM22,4);
+        detectSensor(&limitM21,4);
+        detectSensor(&limitM22,4);
         activateDelayBorder=1;
     
       }
       
-       if(postitionZ<20||positionY>borderZ){
+       if(positionZ<20||positionY>borderZ){
    
-        detectSensor(limitM31,4);
-        detectSensor(limitM32,4);
+        detectSensor(&limitM31,4);
+        detectSensor(&limitM32,4);
         activateDelayBorder=1;
     
       }
@@ -1005,26 +1009,26 @@ class stepperAndy3D{
       }
 
       ///new detection (it avoids iterference errors)
-      if(postitionX<20||positionX>borderX){
+      if(positionX<20||positionX>borderX){
    
-        detectSensor(limitM11,4);
-        detectSensor(limitM12,4);
+        detectSensor(&limitM11,4);
+        detectSensor(&limitM12,4);
         activateDelayBorder=1;
     
       }
 
-       if(postitionY<20||positionY>borderY){
+       if(positionY<20||positionY>borderY){
    
-        detectSensor(limitM21,4);
-        detectSensor(limitM22,4);
+        detectSensor(&limitM21,4);
+        detectSensor(&limitM22,4);
         activateDelayBorder=1;
     
       }
       
-       if(postitionZ<20||positionY>borderZ){
+       if(positionZ<20||positionY>borderZ){
    
-        detectSensor(limitM31,4);
-        detectSensor(limitM32,4);
+        detectSensor(&limitM31,4);
+        detectSensor(&limitM32,4);
         activateDelayBorder=1;
     
       }
@@ -1056,7 +1060,7 @@ class stepperAndy3D{
   /// @param toY 
   /// @param fromY 
   /// @param toZ 
-  void line3D(double fromX,double toX,double fromY,double toY,double fromY,double toZ){
+  void line3D(long int fromX,long int toX,long int fromY,long int toY,long int fromY,long int toZ){
     
     goTo3D(fromX,fromY,fromZ)
       
@@ -1245,7 +1249,7 @@ class stepperAndy3D{
   }
 
 
-}
+};
 
 
 
