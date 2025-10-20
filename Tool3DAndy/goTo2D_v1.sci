@@ -117,10 +117,21 @@ function plainCircleArc(fromX,fromY,toX,toY,centerX,centerY,radius,angleDirectio
     auxiliar=0.0;
      currentI=0;
      currentJ=0;
+     beforeOriginI=0;
+     beforeOriginJ=0;
+     beforeI=0;
+     beforeJ=0;
      centerI=0;
      centerJ=0;
      endI=0;
      endJ=0;
+     diffCNI=0;
+     diffCNJ=0;
+     diffBNI=0;
+     diffBNJ=0;
+     activateI=0;
+     activateJ=0;
+     
 
     
     angle=0;
@@ -144,10 +155,14 @@ function plainCircleArc(fromX,fromY,toX,toY,centerX,centerY,radius,angleDirectio
     
     currentI=fromX;
     currentJ=fromY;
+    currentOriginI=fromX;
+    currentOriginJ=fromY;
     centerI=centerX;
     centerJ=centerY;
     endI=toX;
     endJ=toY;
+    
+
     
     
     
@@ -155,29 +170,35 @@ function plainCircleArc(fromX,fromY,toX,toY,centerX,centerY,radius,angleDirectio
 
     if(currentI~=centerI)then
         auxiliar=atan((currentJ-centerJ),(currentI-centerI));
-        angle=180*(auxiliar/%pi);
+        angle=180*R*(auxiliar/%pi);
     elseif(currentJ>centerJ)then 
-        angle=90;
+        angle=90*R;
     else 
-        angle=-90;
+        angle=-90*R;
     end
    
 printf("angle:%f\n",angle);
     if(endI~=centerI) then
         auxiliar=atan((endJ-centerJ),(endI-centerI));
-        endAngle=180*(auxiliar/%pi);
+        endAngle=180*R*(auxiliar/%pi);
     elseif (endJ>centerJ)then 
-        endAngle=90;
+        endAngle=90*R;
     else 
-        endAngle=-90;
+        endAngle=-90*R;
     end
 printf("ENDangle:%f\n=====================\n",endAngle);
 
               
 
-                auxiliar=((2*angle*%pi)/360.0000000001);
-                nextI=(centerI+int(R*cos(auxiliar)));
-                nextJ=(centerJ+int(R*sin(auxiliar)));
+                auxiliar=((2*angle*%pi)/(R*360.0000000001));
+                nextI=(centerI+round(R*cos(auxiliar)));
+                nextJ=(centerJ+round(R*sin(auxiliar)));
+                beforeI=nextI;
+                beforeJ=nextJ;
+                currentI=nextI;
+                currentJ=nextJ;
+                beforeOriginI=nextI;
+                beforeOriginJ=nextJ;
     //starting the arc
 
 
@@ -186,26 +207,82 @@ printf("ENDangle:%f\n=====================\n",endAngle);
 
         //correction:
             if(angle<endAngle)then 
-                endAngle=-360+endAngle;
+                endAngle=-360*R+endAngle;
             end
             
  
+                
 
-          while(angle>endAngle)
+          while(angle>=endAngle)
               while((nextI-currentI==0)&&(nextJ-currentJ==0))
                   
                 angle=angle-1;
                 
-                auxiliar=((2*angle*%pi)/360.0);
-                nextI=(centerI+int(R*cos(auxiliar)));
-                nextJ=(centerJ+int(R*sin(auxiliar)));
+                auxiliar=((2*angle*%pi)/(R*360.0));
+
+
+              
+                
+                
+                nextI=(centerI+round(R*cos(auxiliar)));
+                nextJ=(centerJ+round(R*sin(auxiliar)));
+                
+               
               
             end
             
           
             
             printf("angle:%f\n=====================\n",angle);
-            goTo2D(currentI,currentJ,nextI,nextJ);
+            
+           
+            diffCNI=nextI-currentI;
+            diffCNJ=nextJ-currentJ;
+            diffBNI=nextI-beforeI;
+            diffBNJ=nextJ-beforeJ;
+            
+            if((diffCNI>0)&&(diffBNI>diffCNI)) then
+                activateI=1;
+            elseif ((diffCNI<0)&&(diffBNI<diffCNI)) then
+                activateI=1;
+            end
+            
+            
+             if((diffCNJ>0)&&(diffBNJ>diffCNJ)) then
+                activateJ=1;
+             
+            elseif ((diffCNJ<0)&&(diffBNJ<diffCNJ)) then
+                activateJ=1;
+            end
+                            
+            if(activateI==1||activateJ==1) then
+                 goTo2D(beforeI,beforeJ,currentI,currentJ);
+                 //sleep(100);
+                 
+                 
+            end
+            
+           
+            if(activateI==1)then
+                beforeI=nextI;
+  
+
+            end
+            if(activateJ==1)then
+                   beforeJ=nextJ;
+                   
+
+        end
+        
+            
+            activateI=0;
+            activateJ=0;
+            
+           
+    
+            
+           // beforeI=currentI;
+            //beforeJ=currentJ;
             currentI=nextI;
             currentJ=nextJ;
             
@@ -222,25 +299,67 @@ printf("ENDangle:%f\n=====================\n",endAngle);
 
         //correction:
         if(angle>endAngle)then
-            endAngle=+360+endAngle;
+            endAngle=+360*R+endAngle;
         end
 
         while(angle<endAngle)
             while((nextI-currentI==0)&&(nextJ-currentJ==0))
             
               angle=angle+1;
-              auxiliar=2*%pi*(angle/360.0);
-              nextI=(centerI+int(R*cos(auxiliar)));
-              nextJ=(centerJ+int(R*sin(auxiliar)));
+              auxiliar=2*%pi*(angle/(R*360.0));
+              nextI=(centerI+round(R*cos(auxiliar)));
+              nextJ=(centerJ+round(R*sin(auxiliar)));
             
             
               end
             
-        
+            diffCNI=nextI-currentI;
+            diffCNJ=nextJ-currentJ;
+            diffBNI=nextI-beforeI;
+            diffBNJ=nextJ-beforeJ;
+            
+            if((diffCNI>0)&&(diffBNI>diffCNI)) then
+                activateI=1;
+            elseif ((diffCNI<0)&&(diffBNI<diffCNI)) then
+                activateI=1;
+            end
+            
+            
+             if((diffCNJ>0)&&(diffBNJ>diffCNJ)) then
+                activateJ=1;
+             
+            elseif ((diffCNJ<0)&&(diffBNJ<diffCNJ)) then
+                activateJ=1;
+            end
+                            
+            if(activateI==1||activateJ==1) then
+                 goTo2D(beforeI,beforeJ,currentI,currentJ);
+                // sleep(100);
+                 
+            end
+            
+           
+            if(activateI==1)then
+                beforeI=currentI;
 
-            goTo2D(currentI,currentJ,nextI,nextJ);
+            end
+            if(activateJ==1)then
+                   beforeJ=currentJ;
+
+        end
+        
+            
+            activateI=0;
+            activateJ=0;
+            
+           
+    
+            
+           // beforeI=currentI;
+            //beforeJ=currentJ;
             currentI=nextI;
             currentJ=nextJ;
+            
         end
      
        end
@@ -248,6 +367,5 @@ printf("ENDangle:%f\n=====================\n",endAngle);
     
 endfunction
 
-
-
+plainCircleArc(25,50,25,49,50,50,25,1)
 
