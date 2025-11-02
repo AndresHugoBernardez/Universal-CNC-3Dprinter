@@ -1,104 +1,13 @@
 
+#include "gCodeAndy.hpp"                                               
+                                                    
 
 
-
-
-
-#define G0_CODE             1000                     
-#define G1_CODE             1001                     
-#define G2_CODE             1002                     
-#define G3_CODE             1003                     
-#define G17_CODE            1017                     
-#define G18_CODE            1018                     
-#define G19_CODE            1019                     
-#define G20_CODE            1020                     
-#define G21_CODE            1021                     
-#define G28_CODE            1028                     
-#define G90_CODE            1090                     
-#define G91_CODE            1091                     
-#define G4_CODE             104                     
-#define G92_CODE            1092
-#define G_UNDEFINED_CODE    1999                     
-#define M0_CODE             2000                     
-#define M3_CODE             2003                     
-#define M4_CODE             2004                     
-#define M5_CODE             2005                     
-#define M104_CODE           2104                     
-#define M109_CODE           2109                     
-#define M140_CODE           2140                     
-#define M190_CODE           2190                     
-#define M112_CODE           2112                     
-#define M999_CODE           2999                     
-#define M100_CODE           2100                     
-#define M17_CODE            2017                     
-#define M18_CODE            2018                     
-#define M105_CODE           2105                     
-#define M114_CODE           2114                                                            
-#define M_UNDEFINED_CODE    2999
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                                                                       
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                                                                       
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    
-                                                   
-class gCodeAndy{
-    public:
-
-    //auxiliar
-    unsigned int i=0;
-    unsigned int j=0;
-    unsigned int k=0;
-    unsigned int gLenght=0;
-    double currentNumber=0;
-    unsigned int returned=0;
-
-
-    //inputs:
-    char gString[32]="";
-
-
-    //outputs:
-    int     gCode=0;
-    double  outX=0; 
-    double  outY=0;
-    double  outZ=0;
- 
-    
-    double  outF=0;
-    double  outS=0;
-
-    double  outI=0;
-    double  outJ=0;
-    double  outK=0;
-
-
-
-
-    gCodeAndy(){
+    gCodeAndy::gCodeAndy(){
 
     }
 
-    gCodeAndy(char inString[]){
+    gCodeAndy::gCodeAndy(char inString[]){
 
 
 
@@ -114,7 +23,9 @@ class gCodeAndy{
         i=0;
         returned=(int)k;
     }
-    int setGString(char inString[]){
+
+
+    int gCodeAndy::setGString(char inString[]){
 
         i=0;
         j=0;
@@ -128,6 +39,7 @@ class gCodeAndy{
         outZ=0;
 
         outF=0;
+        outP=0;
         outS=0;
         outI=0;
         outJ=0;
@@ -152,7 +64,7 @@ class gCodeAndy{
     /// @var this.gString 
     /// @var i
     /// @return  this.returned
-    int firstNumberPos(){
+    int gCodeAndy::firstNumberPos(){
     int init=0;
 
     //If there is no number it will return 
@@ -190,7 +102,7 @@ class gCodeAndy{
 
     
 
-    double convertNumber(){
+    double gCodeAndy::convertNumber(){
       
         char outWord[16]="";
         double number=0,denominator=1;
@@ -270,11 +182,14 @@ class gCodeAndy{
 
 
 
-    int parseGCode(){
+    void gCodeAndy::parseGCode(){
 
         
+ 
+        i=0;
+        gCode=-1;
 
-       i=0;
+
         while (gString[i]!='\n'&&gString[i]!='\0'){
   
             switch(gString[i]){
@@ -373,6 +288,22 @@ class gCodeAndy{
                         
                             
                             break;
+
+                case 'P':
+                case 'p':
+                            
+                            returned=firstNumberPos();
+                            outP=0;
+                            if(returned>=0){
+                                convertNumber();
+                                outP=currentNumber;
+                            }
+
+                        
+                            
+                            break;
+
+
                 case 'S':
                 case 's':
                             
@@ -398,7 +329,7 @@ class gCodeAndy{
                         if(returned>=0){
                             convertNumber();
                             
-                            switch (currentNumber)
+                            switch ((int)currentNumber)
                             {
                             case 0:  gCode=G0_CODE;break;
                             case 1:  gCode=G1_CODE;break;
@@ -431,7 +362,7 @@ class gCodeAndy{
                         if(returned>=0){
                             convertNumber();
                             
-                            switch (currentNumber)
+                            switch ((int)currentNumber)
                             {
                             case 0  : gCode=M0_CODE;break;
                             case 3  : gCode=M3_CODE;break;
@@ -460,7 +391,7 @@ class gCodeAndy{
                         break;
 
 
-                ' ':
+                case ' ':
                 default: i++;
                         break;
 
@@ -476,7 +407,7 @@ class gCodeAndy{
 
 
 
-};
+
 
 
 /*
@@ -507,7 +438,6 @@ Auxiliar text by Grok:
 | **M190** | Establece la temperatura de la cama y espera a que se alcance. Ejemplo: `M190 S60`. |
 | **M112** | Parada de emergencia (kill). Detiene todos los motores y bloquea la máquina. Puede requerir reinicio físico o comando de desbloqueo (como `$X` en Grbl). |
 | **M999** | Comando no estándar (sugerido). Reinicia el sistema después de una parada de emergencia. Útil para implementaciones personalizadas en Arduino. |
-| **M100** | Comando no estándar (sugerido). Configura las dimensiones máximas de los ejes X, Y, Z. Ejemplo: `M100 X300 Y200 Z150` define un volumen de trabajo de 300x200x150 mm. |
 
 ### Códigos adicionales útiles
 - **G4**: Pausa temporal (dwell). Detiene la ejecución por un tiempo especificado (en milisegundos con `P` o segundos con `S`). Ejemplo: `G4 P500` pausa 500 ms.

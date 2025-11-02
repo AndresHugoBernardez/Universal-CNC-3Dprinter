@@ -10,7 +10,7 @@
 #include"C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\arduino.h"
 
 ///------------------
-#include<cmath>
+#include "gCodeAndy.hpp"
 
 
 const int BORDER_MARGIN=20;
@@ -43,9 +43,9 @@ int pin4;
   void Inicializate(int P1,int P2,int P3, int P4){
     
     pin1=P1;
-	pin2=P2;
+	  pin2=P2;
     pin3=P3;
-	pin4=P4;
+	  pin4=P4;
     
     pinMode(pin1,OUTPUT);
     pinMode(pin2,OUTPUT);
@@ -65,11 +65,32 @@ int pin4;
     //60*1000000/(frequency*4096)= microseconds per step.
     if(frequency>0)delayTime=((60*1000000)/(frequency*4096));
     else delayTime=1000;
-    
+    if(delayTime<=1) delayTime=2;
    
   
   }
   
+
+  void turnOff(){
+    digitalWrite(pin1,LOW);
+    digitalWrite(pin2,LOW);
+    digitalWrite(pin3,LOW);
+    digitalWrite(pin4,LOW);
+
+  }
+  void turnOn(){
+    
+    if(positionS>0){
+      positionS--;
+    }
+    else {
+      positionS=7;
+    }
+    StepUp();
+
+  }
+
+
   void StepUp(){
     
     switch(positionS){
@@ -101,8 +122,14 @@ int pin4;
       			digitalWrite(pin4,HIGH);
       			positionS++;
       			break;
-      case 7: 	digitalWrite(pin4,HIGH);
+      case 7: 
+            digitalWrite(pin4,HIGH);
       			digitalWrite(pin1,HIGH);
+            positionS=0;
+            break;
+      
+      default:
+
       			positionS=0;
 				break;      
     }
@@ -143,9 +170,14 @@ int pin4;
       			digitalWrite(pin4,HIGH);
       			positionS--;
       			break;
-      case 7: 	digitalWrite(pin4,HIGH);
+      case 7:
+            digitalWrite(pin4,HIGH);
       			digitalWrite(pin1,HIGH);
-      			positionS--;
+            positionS--;
+            break;
+      default:
+
+      			positionS=0;
 				break;      
     }
     
@@ -223,10 +255,18 @@ else if (digitalRead(sIn->pin)==LOW){
 }
 
 
-/// @brief AxesMode
-int XYMode=0;
-int XZMode=1;
-int YZMode=2;
+/// @brief Axes Mode
+const int XYMode=0;
+const int XZMode=1;
+const int YZMode=2;
+
+/// @brief measure Mode
+const int INCH_MODE=0;
+const int MILIMETER_MODE=0;
+
+/// @brief reference Mode
+const int RELATIVE=0;
+const int ABSOLUTE=1;
 
 //----------
 
@@ -263,8 +303,21 @@ class stepperAndy3D{
   long int positionX=0;
   long int positionY=0;
   long int positionZ=0;
-  
 
+  long int referenceX=0;
+  long int referenceY=0;
+  long int referenceZ=0;
+
+  
+  //modes
+  int axesM=XYMode;
+  int measureMode=MILIMETER_MODE;
+  int referenceMode=RELATIVE;
+
+
+  class gCodeAndy interface("");
+
+  
   
   stepperAndy3D(){
     
@@ -325,6 +378,33 @@ class stepperAndy3D{
     
   } 
  
+
+  /// @brief Reference in motor's steps from (0,0,0)
+  /// @param absoluteX 
+  /// @param absoluteY 
+  /// @param absoluteZ 
+  void setReferences(long int absoluteX, long int absoluteY, long int absoluteZ){
+
+      referenceX=x;
+      referenceY=Y;
+      referenceZ=Z;
+
+
+  }
+
+  /// @brief Reference in mm or inches from (0,0,0)
+  /// @param absoluteX 
+  /// @param absoluteY 
+  /// @param absoluteZ 
+  void setReferences(double absoluteX, double absoluteY, double absoluteZ){
+
+      referenceX=(long int)(absoluteX*((double)counterM1)/longitudeM1);
+      referenceY=(long int)(absoluteY*((double)counterM2)/longitudeM2);
+      referenceZ=(long int)(absoluteZ*((double)counterM3)/longitudeM3);
+
+
+  }
+
   
   /// @brief The default speed is motor1.speed  It will be use for the 3 motors.
   /// @param speed 
@@ -489,6 +569,32 @@ class stepperAndy3D{
     counterM2++;
     counterM3++;
     
+  }
+
+
+  void setMeasureMode(int mssrMode){
+
+    if(measureMode==MILIMETER_MODE && mssMode==INCH_MODE){
+
+      longitudeM1=longitudeM1/25.4;
+      longitudeM2=longitudeM2/25.4;
+      longitudeM3=longitudeM3/25.4;
+      
+      measureMode=INCH_MODE;
+
+    }
+    else if(measureMode==INCH_MODE && mssMode==MILIMETER_MODE){
+
+      longitudeM1=longitudeM1*25.4;
+      longitudeM2=longitudeM2*25.4;
+      longitudeM3=longitudeM3*25.4;
+      
+      measureMode=MILIMETER_MODE;
+
+    }
+
+
+
   }
 
 
@@ -792,6 +898,8 @@ void goTo3D(long int X1,long int Y1,long int Z1){
     
 
     long int i=0;
+
+ 
    
 
 
@@ -966,31 +1074,6 @@ void goTo3D(long int X1,long int Y1,long int Z1){
 
 
 
-
-
-      ///--------------BORDER WATCHDOG (if it is near borders it must try to detect limits)
-      
-
-      borderWatchdog(&activateDelayBorder);
-
-     
-      //delay
-      if(activateDelayBorder){
-        delay(5);
-        activateDelayBorder=0;
-      }
-
-      borderWatchdog(&activateDelayBorder);
-
-      if((limitM11.status==HIGH|| limitM12.status==HIGH )&&positionX<BORDER_MARGIN) positionX=1;
-      else if((limitM11.status==HIGH|| limitM12.status==HIGH )&&positionX>counterM1-BORDER_MARGIN) counterM1=positionX+1;
-      if((limitM21.status==HIGH|| limitM22.status==HIGH )&&positionY<BORDER_MARGIN) positionY=1;
-      else if((limitM21.status==HIGH|| limitM22.status==HIGH )&&positionY>counterM2-BORDER_MARGIN) counterM2=positionY+1;
-      if((limitM31.status==HIGH|| limitM32.status==HIGH )&&positionZ<BORDER_MARGIN) positionZ=1;
-      else if((limitM31.status==HIGH|| limitM32.status==HIGH )&&positionZ>counterM3-BORDER_MARGIN) counterM3=positionZ+1;
-
-      ///------------------end Border watchdog
-
 }
 
 
@@ -1006,7 +1089,7 @@ void goTo3D(long int X1,long int Y1,long int Z1){
   /// @param toY 
   /// @param fromY 
   /// @param toZ 
-  void line3D(long int fromX,long int toX,long int fromY,long int toY,long int fromY,long int toZ){
+  void line3D(long int fromX,long int fromY,long int fromZ,long int toX,long int toY,long int toZ){
     
     goTo3D(fromX,fromY,fromZ)
       
@@ -1328,7 +1411,510 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
 }
 
 
+int gCodeHandler(char gCodeString[]){
 
+  long int newX=0,newY=0,newZ=0,centerX=0,centerY=0,centerZ=0;
+  double radius;
+
+  interface.setGString(gCodeString);
+
+
+  interface.parseGCode();
+
+  switch(interface.gCode){
+
+    case G0_CODE: 
+
+                  delayTime=300;
+
+
+                  if(longitudeM1>0&&longitudeM2>0&&longitudeM3>0){
+                    newX= (long int)(interface.outX*((double)counterM1)/longitudeM1);
+                    newY= (long int)(interface.outY*((double)counterM2)/longitudeM2);
+                    newZ= (long int)(interface.outZ*((double)counterM3)/longitudeM3);   
+                  
+                  
+                  if(referenceMode==RELATIVE){
+                    newX+= positionX
+                    newY+= positionY
+                    newZ+= positionZ
+                  }
+                  else if (referenceMode==ABSOLUTE){
+                    newX+= referenceX;
+                    newY+= referenceY;
+                    newZ+= referenceZ;
+                  }
+                
+                    
+                    
+                    if(newX>0&&newX<counterM1 && newY>0&&newY<counterM2 && newZ>0&&newZ<counterM3){
+                        goTo3D(newX,newY,newZ);
+
+                        return(1);
+
+                    }
+                    else return(-1001);
+                  }
+                  else return(-501);
+
+                  break;           
+    case G1_CODE: 
+    
+                  
+                  if(interface.outF>0&&counterM1>0&&counterM1>0&&interface.outF>0){
+
+
+                    delayTime=(unsigned long)((60*1000000)/((douible)counterM1/longitudeM1)*interface.outF));
+
+
+
+
+                  }
+    
+                  else delayTime=300;
+
+                 if(longitudeM1>0&&longitudeM2>0&&longitudeM3>0){
+
+                  
+                    newX=(long int)(interface.outX*((double)counterM1)/longitudeM1);
+                    newY=(long int)(interface.outY*((double)counterM2)/longitudeM2);
+                    newZ=(long int)(interface.outZ*((double)counterM3)/longitudeM3);                  
+                    
+                    if(referenceMode==RELATIVE){
+                      newX+= positionX
+                      newY+= positionY
+                      newZ+= positionZ
+                    }
+                    else if (referenceMode==ABSOLUTE){
+                      newX+= referenceX;
+                      newY+= referenceY;
+                      newZ+= referenceZ;
+                    }
+                
+
+
+
+
+                    
+                    if(newX>0&&newX<counterM1 && newY>0&&newY<counterM2 && newZ>0&&newZ<counterM3){
+                        goTo3D(newX,newY,newZ);
+
+                        return(1);
+
+                    }
+                    else return(-1002);
+                  }
+                  else return(-501);
+
+                  break;           
+    case G2_CODE: 
+
+                  if(interface.outF>0&&counterM1>0&&counterM1>0&&interface.outF>0){
+
+
+                    delayTime=(unsigned long)((60*1000000)/((douible)counterM1/longitudeM1)*interface.outF));
+
+
+
+
+                  }
+    
+                  else delayTime=300;
+
+
+
+                  switch (axesM)
+                        {
+                        case XYMode:
+                                   
+                                    if(longitudeM1>0&&longitudeM2>0){
+
+                                    
+                                      newX=(long int)(interface.outX*((double)counterM1)/longitudeM1);
+                                      newY=(long int)(interface.outY*((double)counterM2)/longitudeM2);
+                                                      
+                                      centerX=(long int)(interface.outI*((double)counterM1)/longitudeM1);
+                                      centerY=(long int)(interface.outJ*((double)counterM2)/longitudeM2);
+                                      
+                                      
+                                      if(referenceMode==RELATIVE){
+                                        newX+= positionX;
+                                        newY+= positionY;
+                                        newZ+= positionZ;
+                                        centerX=positionX;
+                                        centerY=positionY;
+                                        centerZ=positionZ;
+                                      }
+                                      else if (referenceMode==ABSOLUTE){
+                                        newX+= referenceX;
+                                        newY+= referenceY;
+                                        newZ+= positionZ;
+                                        centerX+= referenceX;
+                                        centerY+= referenceY;
+                                        centerZ+= positionZ;
+                                      }
+
+
+
+
+
+                                      radius=sqrt( pow((double)(newX-centerX),2)  + pow((double)(newY-centerY),2)  );
+
+
+                                      if(newX>0&&newX<counterM1 && newY>0&&newY<counterM2 &&  radius>0){
+                                          
+                                           plainCircleArc(positionX,positionY,positionZ,newX,newY,newZ,centerX,centerY,centerZ,axesM,radius,1);
+                                           return(1);
+                                      }
+                                      else return(-1003);
+                                    }
+                                    else return(-501);
+                          break;
+
+                          case YZMode:
+                                   
+                                    if(longitudeM2>0&&longitudeM3>0){
+
+                                    
+                                     
+                                      newY=positionY+ (long int)(interface.outY*((double)counterM2)/longitudeM2);
+                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);              
+                                      
+                                      centerY=positionY+(long int)(interface.outJ*((double)counterM2)/longitudeM2);
+                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      
+
+                                      if(referenceMode==RELATIVE){
+                                        newX+= positionX;
+                                        newY+= positionY;
+                                        newZ+= positionZ;
+                                        centerX=positionX;
+                                        centerY=positionY;
+                                        centerZ=positionZ;
+                                      }
+                                      else if (referenceMode==ABSOLUTE){
+                                        newX+= positionX;
+                                        newY+= referenceY;
+                                        newZ+= referenceZ;
+                                        centerX+= positionX;
+                                        centerY+= referenceY;
+                                        centerZ+= referenceZ;
+                                      }
+
+
+                                      radius=sqrt( pow((double)(newY-centerY),2)  + pow((double)(newZ-centerZ),2)  );
+
+
+                                      if( newY>0&&newY<counterM2 && newZ>0&&newZ<counterM3 && radius>0){
+                                          
+                                           plainCircleArc(positionX,positionY,positionZ,newX,newY,newZ,centerX,centerY,centerZ,axesM,radius,1);
+                                           return(1);
+                                      }
+                                      else return(-1003);
+                                    }
+                                    else return(-501);
+                          break;
+
+                          case XZMode:
+                                   
+                                    if(longitudeM1>0&&longitudeM3>0){
+
+                                    
+                                      newX=positionX+ (long int)(interface.outX*((double)counterM1)/longitudeM1);
+                                      
+                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);                               
+                                      centerX=positionX+(long int)(interface.outI*((double)counterM1)/longitudeM1);
+                                      
+                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      
+
+                                      if(referenceMode==RELATIVE){
+                                        newX+= positionX;
+                                        newY+= positionY;
+                                        newZ+= positionZ;
+                                        centerX=positionX;
+                                        centerY=positionY;
+                                        centerZ=positionZ;
+                                      }
+                                      else if (referenceMode==ABSOLUTE){
+                                        newX+= referenceX;
+                                        newY+= positionY;
+                                        newZ+= referenceZ;
+                                        centerX+= referenceX;
+                                        centerY+= positionY;
+                                        centerZ+= referenceZ;
+                                      }
+
+
+
+
+                                      radius=sqrt( pow((double)(newX-centerX),2)  + pow((double)(newZ-centerZ),2)  );
+
+
+                                      if(newX>0&&newX<counterM1 && newZ>0&&newZ<counterM3 && radius>0){
+                                          
+                                           plainCircleArc(positionX,positionY,positionZ,newX,newY,newZ,centerX,centerY,centerZ,axesM,radius,1);
+                                           return(1);
+                                      }
+                                      else return(-1003);
+                                    }
+                                    else return(-501);
+                          break;
+                        
+                        default:
+                                    return(-502);
+                          break;
+                        }
+                        
+
+
+
+
+
+                  
+
+                  break;  
+
+                          
+    case G3_CODE: 
+    
+                    if(interface.outF>0&&counterM1>0&&counterM1>0&&interface.outF>0){
+
+
+                    delayTime=(unsigned long)((60*1000000)/((douible)counterM1/longitudeM1)*interface.outF));
+
+
+
+
+                  }
+    
+                  else delayTime=300;
+
+
+
+                  switch (axesM)
+                        {
+                        case XYMode:
+                                   
+                                    if(longitudeM1>0&&longitudeM2>0){
+
+                                    
+                                      newX=positionX+ (long int)(interface.outX*((double)counterM1)/longitudeM1);
+                                      newY=positionY+ (long int)(interface.outY*((double)counterM2)/longitudeM2);
+                                      newZ=positionZ;                  
+                                      centerX=positionX+(long int)(interface.outI*((double)counterM1)/longitudeM1);
+                                      centerY=positionY+(long int)(interface.outJ*((double)counterM2)/longitudeM2);
+                                      centerZ=positionZ;
+                                      
+                                      radius=sqrt( pow((double)(newX-centerX),2)  + pow((double)(newY-centerY),2)  );
+
+
+                                      if(newX>0&&newX<counterM1 && newY>0&&newY<counterM2 &&  radius>0){
+                                          
+                                           plainCircleArc(positionX,positionY,positionZ,newX,newY,newZ,centerX,centerY,centerZ,axesM,radius,-1);
+                                           return(1);
+                                      }
+                                      else return(-1003);
+                                    }
+                                    else return(-501);
+                          break;
+
+                          case YZMode:
+                                   
+                                    if(longitudeM2>0&&longitudeM3>0){
+
+                                    
+                                      newX=positionX;
+                                      newY=positionY+ (long int)(interface.outY*((double)counterM2)/longitudeM2);
+                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);              
+                                      centerX=positionX;
+                                      centerY=positionY+(long int)(interface.outJ*((double)counterM2)/longitudeM2);
+                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      
+                                      radius=sqrt( pow((double)(newY-centerY),2)  + pow((double)(newZ-centerZ),2)  );
+
+
+                                      if( newY>0&&newY<counterM2 && newZ>0&&newZ<counterM3 && radius>0){
+                                          
+                                           plainCircleArc(positionX,positionY,positionZ,newX,newY,newZ,centerX,centerY,centerZ,axesM,radius,-1);
+                                           return(1);
+                                      }
+                                      else return(-1003);
+                                    }
+                                    else return(-501);
+                          break;
+
+                          case XZMode:
+                                   
+                                    if(longitudeM1>0&&longitudeM3>0){
+
+                                    
+                                      newX=positionX+ (long int)(interface.outX*((double)counterM1)/longitudeM1);
+                                      newY=positionY;
+                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);                               
+                                      centerX=positionX+(long int)(interface.outI*((double)counterM1)/longitudeM1);
+                                      centerY=positionY;
+                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      
+                                      radius=sqrt( pow((double)(newX-centerX),2)  + pow((double)(newZ-centerZ),2)  );
+
+
+                                      if(newX>0&&newX<counterM1 && newZ>0&&newZ<counterM3 && radius>0){
+                                          
+                                           plainCircleArc(positionX,positionY,positionZ,newX,newY,newZ,centerX,centerY,centerZ,axesM,radius,-1);
+                                           return(1);
+                                      }
+                                      else return(-1003);
+                                    }
+                                    else return(-501);
+                          break;
+                        
+                        default:
+                                    return(-502);
+                          break;
+                        }
+                        
+
+
+
+
+
+                  
+
+                  break;         
+    case G17_CODE: 
+                    axesM=XYMode;
+                    return(1);
+                    break;          
+    case G18_CODE: 
+                    axesM=XYMode;
+                    return(1);
+                    break;   
+    case G19_CODE: 
+                    axesM=XYMode;
+                    return(1);
+                    break;   
+    case G20_CODE: 
+                    setMeasureMode(INCH_MODE);
+                    break;          
+    case G21_CODE: 
+                    setMeasureMode(MILIMETER_MODE);
+                    return(1);
+                    break; 
+    case G28_CODE: 
+                    Calibrate();
+                    return(1);
+                    break;          
+    case G90_CODE: 
+                    referenceMode=ABSOLUTE;
+                    return(1);
+                    break;          
+    case G91_CODE: 
+                    referenceMode=RELATIVE;
+                    return(1);
+                    break;          
+    case G4_CODE: 
+                    //pause miliseconds
+                    if(outP>=1) {
+                      delay((unsigned long)outP);
+                      return(1);
+                    }
+                    else return(-504);
+                    
+                    break;           
+    case G92_CODE: 
+                    if(longitudeM1>0&&longitudeM2>0&&longitudeM3>0){
+
+                  
+                      newX=(long int)(interface.outX*((double)counterM1)/longitudeM1);
+                      newY=(long int)(interface.outY*((double)counterM2)/longitudeM2);
+                      newZ=(long int)(interface.outZ*((double)counterM3)/longitudeM3);                  
+
+                      setReferences(newX,newY,newZ);
+                      return(1);
+
+                    }
+                    else return(-501)
+                    
+                    break;          
+    case G_UNDEFINED_CODE: 
+    
+                          return(-510);
+                          break;  
+         
+   
+
+    case M0_CODE:         
+    case M112_CODE: 
+                    //Emergency stop: restart is needed!!
+                    motor1.turnOff();
+                    motor2.turnOff();
+                    motor3.turnOff();
+
+                    // infinity loop
+                    while(1==1){
+                      delay(666);
+
+                    }
+                    return(-666);
+                    break;     
+       
+    case M100_CODE: //set Longitudes
+                    newX=0;
+                    newY=0;
+                    newZ=0;
+                    if(interface.outX>0){
+                       longitudeM1=interface.outX;
+                       newX=1;
+                    }
+                    if(interface.outY>0){
+                       longitudeM1=interface.outX;
+                       newY=1;
+                    }
+                    if(interface.outZ>0){
+                       longitudeM1=interface.outX;
+                       newZ=1;
+                    }
+
+                    if(newX||newY||newZ) return=1;
+                    else return(-404);
+
+                    break;         
+    case M17_CODE:  
+                    motor1.turnOn();
+                    motor2.turnOn();
+                    motor3.turnOn();
+                    return(1);
+                    break;          
+    case M18_CODE: 
+                    motor1.turnOff();
+                    motor2.turnOff();
+                    motor3.turnOff();
+                    return(1);
+                    break;          
+    
+    case M114_CODE: 
+                     //send postition
+                    return(114);
+                    break;         
+    case M_UNDEFINED_CODE: 
+                            return(-511);
+                            break;  
+    default: break;
+
+
+
+
+
+
+
+  }
+
+
+
+
+
+}
 
 
 
