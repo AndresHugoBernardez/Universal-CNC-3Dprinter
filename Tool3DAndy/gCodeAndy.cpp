@@ -7,25 +7,9 @@
 
     }
 
-    gCodeAndy::gCodeAndy(char inString[]){
+  
 
-
-
-
-        for(k=0;k<32&&inString[k]!='\n'&&inString[k]!='\0';k++){
-            gString[k]=inString[k];
-
-
-
-        }
-        gString[k]='\0';
-        gLenght=k;
-        i=0;
-        returned=(int)k;
-    }
-
-
-    int gCodeAndy::setGString(char inString[]){
+    int gCodeAndy::setGString(const char * inString){
 
         i=0;
         j=0;
@@ -57,6 +41,8 @@
         returned=(int)k;
         return(returned);
     }
+
+
 
 
 

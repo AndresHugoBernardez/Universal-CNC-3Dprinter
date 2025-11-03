@@ -315,7 +315,7 @@ class stepperAndy3D{
   int referenceMode=RELATIVE;
 
 
-  class gCodeAndy interface("");
+  gCodeAndy gInterface;
 
   
   
@@ -379,15 +379,16 @@ class stepperAndy3D{
   } 
  
 
+
   /// @brief Reference in motor's steps from (0,0,0)
   /// @param absoluteX 
   /// @param absoluteY 
   /// @param absoluteZ 
-  void setReferences(long int absoluteX, long int absoluteY, long int absoluteZ){
+  void setReferencesSteps(long int absoluteX, long int absoluteY, long int absoluteZ){
 
-      referenceX=x;
-      referenceY=Y;
-      referenceZ=Z;
+      referenceX=absoluteX;
+      referenceY=absoluteY;
+      referenceZ=absoluteZ;
 
 
   }
@@ -396,7 +397,7 @@ class stepperAndy3D{
   /// @param absoluteX 
   /// @param absoluteY 
   /// @param absoluteZ 
-  void setReferences(double absoluteX, double absoluteY, double absoluteZ){
+  void setReferencesMeasure(double absoluteX, double absoluteY, double absoluteZ){
 
       referenceX=(long int)(absoluteX*((double)counterM1)/longitudeM1);
       referenceY=(long int)(absoluteY*((double)counterM2)/longitudeM2);
@@ -572,9 +573,9 @@ class stepperAndy3D{
   }
 
 
-  void setMeasureMode(int mssrMode){
+  void setMeasureMode(int msrMode){
 
-    if(measureMode==MILIMETER_MODE && mssMode==INCH_MODE){
+    if(measureMode==MILIMETER_MODE && msrMode==INCH_MODE){
 
       longitudeM1=longitudeM1/25.4;
       longitudeM2=longitudeM2/25.4;
@@ -583,7 +584,7 @@ class stepperAndy3D{
       measureMode=INCH_MODE;
 
     }
-    else if(measureMode==INCH_MODE && mssMode==MILIMETER_MODE){
+    else if(measureMode==INCH_MODE && msrMode==MILIMETER_MODE){
 
       longitudeM1=longitudeM1*25.4;
       longitudeM2=longitudeM2*25.4;
@@ -1091,14 +1092,14 @@ void goTo3D(long int X1,long int Y1,long int Z1){
   /// @param toZ 
   void line3D(long int fromX,long int fromY,long int fromZ,long int toX,long int toY,long int toZ){
     
-    goTo3D(fromX,fromY,fromZ)
+    goTo3D(fromX,fromY,fromZ);
       
     //You could activate something here-----
     
     
     //----------
       
-    goto3D(toX,toY,toZ);
+    goTo3D(toX,toY,toZ);
     
   }
     
@@ -1122,10 +1123,10 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
     
     long int currentI=0;
     long int currentJ=0;
-    long int beforeOriginI=0;
-    long int beforeOriginJ=0;
     long int beforeI=0;
     long int beforeJ=0;
+    long int nextI=0;
+    long int nextJ=0;
     long int centerI=0;
     long int centerJ=0;
     long int centerK=0;
@@ -1137,6 +1138,8 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
     long int diffBNJ=0;
     int activateI=0;
     int activateJ=0;
+    
+
     //double CosI=0;
     //double SinJ=0;
     //double PI2=PI/2;
@@ -1168,8 +1171,6 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
       if(modeAxis==XYMode) {
           currentI=fromX;
           currentJ=fromY;
-          currentOriginI=fromX;
-          currentOriginJ=fromY;
           centerI=centerX;
           centerJ=centerY;
           centerK=centerZ;
@@ -1179,8 +1180,6 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
       else if (modeAxis==YZMode) {
           currentI=fromY;
           currentJ=fromZ;
-          currentOriginI=fromY;
-          currentOriginJ=fromZ;
           centerI=centerY;
           centerJ=centerZ;
           centerK=centerX;
@@ -1190,8 +1189,6 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
       else if (modeAxis==XZMode) {
           currentI=fromX;
           currentJ=fromZ;
-          currentOriginI=fromX;
-          currentOriginJ=fromZ;
           centerI=centerX;
           centerJ=centerZ;
           centerK=centerY;
@@ -1238,8 +1235,7 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
                 beforeJ=nextJ;
                 currentI=nextI;
                 currentJ=nextJ;
-                beforeOriginI=nextI;
-                beforeOriginJ=nextJ;
+
     //starting the arc
 
 
@@ -1262,10 +1258,9 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
                 auxiliar=((2*angle*PI)/(R*360.0));
 
                 
-                cosI=round(R*cos(auxiliar));
-                sinJ=round(R*sin(auxiliar));
-                nextI=centerI+cosI;
-                nextJ=centerJ+sinJ;
+
+                nextI=(centerI+round(R*cos(auxiliar)));
+                nextJ=(centerJ+round(R*sin(auxiliar)));
                 
                
               
@@ -1339,9 +1334,9 @@ void  plainCircleArc(long int fromX,long int fromY,long int fromZ,long int toX,l
 
 
         //correction:
-        if(angle>endAngle)then
+        if(angle>endAngle){
             endAngle=+360*R+endAngle;
-        end
+          }
 
         while(angle<endAngle){
             while((nextI-currentI==0)&&(nextJ-currentJ==0)){
@@ -1416,12 +1411,12 @@ int gCodeHandler(char gCodeString[]){
   long int newX=0,newY=0,newZ=0,centerX=0,centerY=0,centerZ=0;
   double radius;
 
-  interface.setGString(gCodeString);
+  gInterface.setGString(gCodeString);
 
 
-  interface.parseGCode();
+  gInterface.parseGCode();
 
-  switch(interface.gCode){
+  switch(gInterface.gCode){
 
     case G0_CODE: 
 
@@ -1429,15 +1424,15 @@ int gCodeHandler(char gCodeString[]){
 
 
                   if(longitudeM1>0&&longitudeM2>0&&longitudeM3>0){
-                    newX= (long int)(interface.outX*((double)counterM1)/longitudeM1);
-                    newY= (long int)(interface.outY*((double)counterM2)/longitudeM2);
-                    newZ= (long int)(interface.outZ*((double)counterM3)/longitudeM3);   
+                    newX= (long int)(gInterface.outX*((double)counterM1)/longitudeM1);
+                    newY= (long int)(gInterface.outY*((double)counterM2)/longitudeM2);
+                    newZ= (long int)(gInterface.outZ*((double)counterM3)/longitudeM3);   
                   
                   
                   if(referenceMode==RELATIVE){
-                    newX+= positionX
-                    newY+= positionY
-                    newZ+= positionZ
+                    newX+= positionX;
+                    newY+= positionY;
+                    newZ+= positionZ;
                   }
                   else if (referenceMode==ABSOLUTE){
                     newX+= referenceX;
@@ -1461,10 +1456,10 @@ int gCodeHandler(char gCodeString[]){
     case G1_CODE: 
     
                   
-                  if(interface.outF>0&&counterM1>0&&counterM1>0&&interface.outF>0){
+                  if(gInterface.outF>0&&counterM1>0&&counterM1>0&&gInterface.outF>0){
 
 
-                    delayTime=(unsigned long)((60*1000000)/((douible)counterM1/longitudeM1)*interface.outF));
+                    delayTime=(unsigned long)((60*1000000)/(((double)counterM1/longitudeM1)*gInterface.outF));
 
 
 
@@ -1476,14 +1471,14 @@ int gCodeHandler(char gCodeString[]){
                  if(longitudeM1>0&&longitudeM2>0&&longitudeM3>0){
 
                   
-                    newX=(long int)(interface.outX*((double)counterM1)/longitudeM1);
-                    newY=(long int)(interface.outY*((double)counterM2)/longitudeM2);
-                    newZ=(long int)(interface.outZ*((double)counterM3)/longitudeM3);                  
+                    newX=(long int)(gInterface.outX*((double)counterM1)/longitudeM1);
+                    newY=(long int)(gInterface.outY*((double)counterM2)/longitudeM2);
+                    newZ=(long int)(gInterface.outZ*((double)counterM3)/longitudeM3);                  
                     
                     if(referenceMode==RELATIVE){
-                      newX+= positionX
-                      newY+= positionY
-                      newZ+= positionZ
+                      newX+= positionX;
+                      newY+= positionY;
+                      newZ+= positionZ;
                     }
                     else if (referenceMode==ABSOLUTE){
                       newX+= referenceX;
@@ -1509,10 +1504,10 @@ int gCodeHandler(char gCodeString[]){
                   break;           
     case G2_CODE: 
 
-                  if(interface.outF>0&&counterM1>0&&counterM1>0&&interface.outF>0){
+                  if(gInterface.outF>0&&counterM1>0&&counterM1>0&&gInterface.outF>0){
 
 
-                    delayTime=(unsigned long)((60*1000000)/((douible)counterM1/longitudeM1)*interface.outF));
+                    delayTime=(unsigned long)((60*1000000)/(  ((double)counterM1)/longitudeM1)*gInterface.outF);
 
 
 
@@ -1530,11 +1525,11 @@ int gCodeHandler(char gCodeString[]){
                                     if(longitudeM1>0&&longitudeM2>0){
 
                                     
-                                      newX=(long int)(interface.outX*((double)counterM1)/longitudeM1);
-                                      newY=(long int)(interface.outY*((double)counterM2)/longitudeM2);
+                                      newX=(long int)(gInterface.outX*((double)counterM1)/longitudeM1);
+                                      newY=(long int)(gInterface.outY*((double)counterM2)/longitudeM2);
                                                       
-                                      centerX=(long int)(interface.outI*((double)counterM1)/longitudeM1);
-                                      centerY=(long int)(interface.outJ*((double)counterM2)/longitudeM2);
+                                      centerX=(long int)(gInterface.outI*((double)counterM1)/longitudeM1);
+                                      centerY=(long int)(gInterface.outJ*((double)counterM2)/longitudeM2);
                                       
                                       
                                       if(referenceMode==RELATIVE){
@@ -1577,11 +1572,11 @@ int gCodeHandler(char gCodeString[]){
 
                                     
                                      
-                                      newY=positionY+ (long int)(interface.outY*((double)counterM2)/longitudeM2);
-                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);              
+                                      newY=positionY+ (long int)(gInterface.outY*((double)counterM2)/longitudeM2);
+                                      newZ=positionZ+ (long int)(gInterface.outZ*((double)counterM3)/longitudeM3);              
                                       
-                                      centerY=positionY+(long int)(interface.outJ*((double)counterM2)/longitudeM2);
-                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      centerY=positionY+(long int)(gInterface.outJ*((double)counterM2)/longitudeM2);
+                                      centerZ=positionZ+ (long int)(gInterface.outK*((double)counterM3)/longitudeM3);
                                       
 
                                       if(referenceMode==RELATIVE){
@@ -1620,12 +1615,12 @@ int gCodeHandler(char gCodeString[]){
                                     if(longitudeM1>0&&longitudeM3>0){
 
                                     
-                                      newX=positionX+ (long int)(interface.outX*((double)counterM1)/longitudeM1);
+                                      newX=positionX+ (long int)(gInterface.outX*((double)counterM1)/longitudeM1);
                                       
-                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);                               
-                                      centerX=positionX+(long int)(interface.outI*((double)counterM1)/longitudeM1);
+                                      newZ=positionZ+ (long int)(gInterface.outZ*((double)counterM3)/longitudeM3);                               
+                                      centerX=positionX+(long int)(gInterface.outI*((double)counterM1)/longitudeM1);
                                       
-                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      centerZ=positionZ+ (long int)(gInterface.outK*((double)counterM3)/longitudeM3);
                                       
 
                                       if(referenceMode==RELATIVE){
@@ -1678,10 +1673,10 @@ int gCodeHandler(char gCodeString[]){
                           
     case G3_CODE: 
     
-                    if(interface.outF>0&&counterM1>0&&counterM1>0&&interface.outF>0){
+                    if(gInterface.outF>0&&counterM1>0&&counterM1>0&&gInterface.outF>0){
 
 
-                    delayTime=(unsigned long)((60*1000000)/((douible)counterM1/longitudeM1)*interface.outF));
+                    delayTime=(unsigned long)((60*1000000)/(((double)counterM1/longitudeM1)*gInterface.outF));
 
 
 
@@ -1699,11 +1694,11 @@ int gCodeHandler(char gCodeString[]){
                                     if(longitudeM1>0&&longitudeM2>0){
 
                                     
-                                      newX=positionX+ (long int)(interface.outX*((double)counterM1)/longitudeM1);
-                                      newY=positionY+ (long int)(interface.outY*((double)counterM2)/longitudeM2);
+                                      newX=positionX+ (long int)(gInterface.outX*((double)counterM1)/longitudeM1);
+                                      newY=positionY+ (long int)(gInterface.outY*((double)counterM2)/longitudeM2);
                                       newZ=positionZ;                  
-                                      centerX=positionX+(long int)(interface.outI*((double)counterM1)/longitudeM1);
-                                      centerY=positionY+(long int)(interface.outJ*((double)counterM2)/longitudeM2);
+                                      centerX=positionX+(long int)(gInterface.outI*((double)counterM1)/longitudeM1);
+                                      centerY=positionY+(long int)(gInterface.outJ*((double)counterM2)/longitudeM2);
                                       centerZ=positionZ;
                                       
                                       radius=sqrt( pow((double)(newX-centerX),2)  + pow((double)(newY-centerY),2)  );
@@ -1725,11 +1720,11 @@ int gCodeHandler(char gCodeString[]){
 
                                     
                                       newX=positionX;
-                                      newY=positionY+ (long int)(interface.outY*((double)counterM2)/longitudeM2);
-                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);              
+                                      newY=positionY+ (long int)(gInterface.outY*((double)counterM2)/longitudeM2);
+                                      newZ=positionZ+ (long int)(gInterface.outZ*((double)counterM3)/longitudeM3);              
                                       centerX=positionX;
-                                      centerY=positionY+(long int)(interface.outJ*((double)counterM2)/longitudeM2);
-                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      centerY=positionY+(long int)(gInterface.outJ*((double)counterM2)/longitudeM2);
+                                      centerZ=positionZ+ (long int)(gInterface.outK*((double)counterM3)/longitudeM3);
                                       
                                       radius=sqrt( pow((double)(newY-centerY),2)  + pow((double)(newZ-centerZ),2)  );
 
@@ -1749,12 +1744,12 @@ int gCodeHandler(char gCodeString[]){
                                     if(longitudeM1>0&&longitudeM3>0){
 
                                     
-                                      newX=positionX+ (long int)(interface.outX*((double)counterM1)/longitudeM1);
+                                      newX=positionX+ (long int)(gInterface.outX*((double)counterM1)/longitudeM1);
                                       newY=positionY;
-                                      newZ=positionZ+ (long int)(interface.outZ*((double)counterM3)/longitudeM3);                               
-                                      centerX=positionX+(long int)(interface.outI*((double)counterM1)/longitudeM1);
+                                      newZ=positionZ+ (long int)(gInterface.outZ*((double)counterM3)/longitudeM3);                               
+                                      centerX=positionX+(long int)(gInterface.outI*((double)counterM1)/longitudeM1);
                                       centerY=positionY;
-                                      centerZ=positionZ+ (long int)(interface.outK*((double)counterM3)/longitudeM3);
+                                      centerZ=positionZ+ (long int)(gInterface.outK*((double)counterM3)/longitudeM3);
                                       
                                       radius=sqrt( pow((double)(newX-centerX),2)  + pow((double)(newZ-centerZ),2)  );
 
@@ -1796,6 +1791,7 @@ int gCodeHandler(char gCodeString[]){
                     break;   
     case G20_CODE: 
                     setMeasureMode(INCH_MODE);
+                    return(1);
                     break;          
     case G21_CODE: 
                     setMeasureMode(MILIMETER_MODE);
@@ -1815,8 +1811,8 @@ int gCodeHandler(char gCodeString[]){
                     break;          
     case G4_CODE: 
                     //pause miliseconds
-                    if(outP>=1) {
-                      delay((unsigned long)outP);
+                    if(gInterface.outP>=1) {
+                      delay((unsigned long)gInterface.outP);
                       return(1);
                     }
                     else return(-504);
@@ -1826,15 +1822,15 @@ int gCodeHandler(char gCodeString[]){
                     if(longitudeM1>0&&longitudeM2>0&&longitudeM3>0){
 
                   
-                      newX=(long int)(interface.outX*((double)counterM1)/longitudeM1);
-                      newY=(long int)(interface.outY*((double)counterM2)/longitudeM2);
-                      newZ=(long int)(interface.outZ*((double)counterM3)/longitudeM3);                  
+                      newX=(long int)(gInterface.outX*((double)counterM1)/longitudeM1);
+                      newY=(long int)(gInterface.outY*((double)counterM2)/longitudeM2);
+                      newZ=(long int)(gInterface.outZ*((double)counterM3)/longitudeM3);                  
 
-                      setReferences(newX,newY,newZ);
+                      setReferencesSteps(newX,newY,newZ);
                       return(1);
 
                     }
-                    else return(-501)
+                    else return(-501);
                     
                     break;          
     case G_UNDEFINED_CODE: 
@@ -1863,20 +1859,20 @@ int gCodeHandler(char gCodeString[]){
                     newX=0;
                     newY=0;
                     newZ=0;
-                    if(interface.outX>0){
-                       longitudeM1=interface.outX;
+                    if(gInterface.outX>0){
+                       longitudeM1=gInterface.outX;
                        newX=1;
                     }
-                    if(interface.outY>0){
-                       longitudeM1=interface.outX;
+                    if(gInterface.outY>0){
+                       longitudeM1=gInterface.outX;
                        newY=1;
                     }
-                    if(interface.outZ>0){
-                       longitudeM1=interface.outX;
+                    if(gInterface.outZ>0){
+                       longitudeM1=gInterface.outX;
                        newZ=1;
                     }
 
-                    if(newX||newY||newZ) return=1;
+                    if(newX||newY||newZ) return(1);
                     else return(-404);
 
                     break;         
@@ -1936,6 +1932,10 @@ int gCodeHandler(char gCodeString[]){
 
 
 
+stepperAndy3D tool3D;
+
+
+
 
 
 
@@ -1945,18 +1945,86 @@ void setup()
 {
   Serial.begin(9600);
 
+  tool3D.InicializateMotor(1,3,4,5,6,120);
+  tool3D.InicializateMotor(2,9,10,11,12,120);
+  tool3D.InicializateMotor(3,A1,A2,A3,A4,120);
+  tool3D.InicializateLimits(2,7,8,13,A0,A6);
+  tool3D.setMeasureMode(MILIMETER_MODE);
+  tool3D.referenceMode=RELATIVE;
+  tool3D.setReferencesSteps(0,0,0);
+  tool3D.assignMeassure(1000,1000,1000);
+  tool3D.Speed(120);
+  delay(1000);
+  tool3D.Calibrate();
 
-
-
-
-
+   Serial.println("3D Tool ready!");
   
 }
 
+
+char stringIn[32]="";
+char character=0;
+int ready=1;
+int i=0;
+int returned=-1;
+
+
 void loop()
 {
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000); // Wait for 1000 millisecond(s)
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(1000); // Wait for 1000 millisecond(s)
+
+ 
+  Serial.println("Insert G-Code command:");
+  
+  i=0;
+  ready=1;
+  while(ready){
+
+    if(Serial.available()){
+
+      character=Serial.read();
+      if(character=='\0'||character=='\n'||i>31){
+        ready=0;
+        stringIn[i]='\0';
+      }
+      else{
+
+        stringIn[i]=character;
+        i++;
+      }
+
+
+    }
+    
+
+  }
+
+  
+
+  returned=tool3D.gCodeHandler(stringIn);
+
+  //print Current Position
+  if(returned==114){
+
+    Serial.println("Pos:");
+    Serial.print("X");
+    Serial.println(  ((double)tool3D.positionX)*tool3D.longitudeM1/((double)tool3D.counterM1) );
+    Serial.print("Y");
+    Serial.println(  ((double)tool3D.positionY)*tool3D.longitudeM2/((double)tool3D.counterM2) );
+    Serial.print("Z");
+    Serial.println(  ((double)tool3D.positionZ)*tool3D.longitudeM3/((double)tool3D.counterM3) );
+
+  }
+    //other:
+  else if(returned==1){
+    Serial.println(returned);
+  }
+  //errors:
+  else if(returned<0){
+     Serial.print("E");
+     Serial.println(returned);
+  }
+
+  
+  delay(20);
+
 }

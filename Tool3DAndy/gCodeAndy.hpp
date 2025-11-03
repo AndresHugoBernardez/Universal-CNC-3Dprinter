@@ -82,8 +82,12 @@ class gCodeAndy{
 
     gCodeAndy();
 
-    gCodeAndy(char inString[]);
-    int setGString(char inString[]);
+
+    gCodeAndy(const char *inString);
+
+
+    int setGString(const char *inString);
+
 
 
     int firstNumberPos();
