@@ -63,10 +63,11 @@
             //it must not be end of line or end of string
             gString[i]!='\n' && gString[i]!='\0'  &&  
            (   
-                // if it is not a number go forward
-                (gString[i]<'0' || gString[i]>'9')    ||   
+               
                 // if it is '.' or '-' there must be a number in the next character if not ignore and go forward
-                (  (gString[i]=='-'||gString[i]=='.') && (gString[i+1]<'0' || gString[i+1]>'9')    )
+                (  (gString[i]=='-'||gString[i]=='.') && (gString[i+1]<'0' || gString[i+1]>'9')    ) ||
+                 // if it is not a number go forward
+                (  gString[i]!='-'&&gString[i]!='.'&& (gString[i]<'0' || gString[i]>'9')  )
             ) 
         ){
 
@@ -139,9 +140,10 @@
             }
             if(outWord[k]=='.'){
                 denominator=1;
+                k++;
                 while(outWord[k]!='\0'){
                 denominator*=10;
-                number+=((double) (outWord[k]-'0'))/denominator;
+                number+=( ((double) (outWord[k]-'0'))/denominator );
                 k++;
             }
 
@@ -354,6 +356,9 @@
                             case 3  : gCode=M3_CODE;break;
                             case 4  : gCode=M4_CODE;break;
                             case 5  : gCode=M5_CODE;break;
+                            case 6  : gCode=M6_CODE;break;
+                            case 7  : gCode=M7_CODE;break;
+                            case 8  : gCode=M8_CODE;break;
                             case 104: gCode=M104_CODE;break;
                             case 109: gCode=M109_CODE;break;
                             case 140: gCode=M140_CODE;break;

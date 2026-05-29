@@ -27,7 +27,10 @@
 #define M0_CODE             2000                     
 #define M3_CODE             2003                     
 #define M4_CODE             2004                     
-#define M5_CODE             2005                     
+#define M5_CODE             2005
+#define M6_CODE             2006  // establecer límites de angulo de servo
+#define M7_CODE             2007  // servo down
+#define M8_CODE             2008  // servo Up                       
 #define M104_CODE           2104                     
 #define M109_CODE           2109                     
 #define M140_CODE           2140                     
