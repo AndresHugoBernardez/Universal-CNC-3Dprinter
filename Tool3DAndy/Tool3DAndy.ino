@@ -2194,16 +2194,18 @@ int gCodeHandler(char gCodeString[]){
                     }
     case M7_CODE:  // servo down
                     servoOn();
+		            delay(500);
                     servoDown();
-                    delay(888);
+                    delay(1000);
                     servoOff();
                     return(1);
                     break;
     
      case M8_CODE:  // servo up
                     servoOn();
+		            delay(500);
                     servoUp();
-                    delay(888);
+                    delay(1000);
                     servoOff();
                     return(1);
                     break;
